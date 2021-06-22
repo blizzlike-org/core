@@ -101,6 +101,14 @@ ConfVersion=2021031501
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 #
+#    Invite.Enabled
+#        Allows to signup via game client without former registration by using password defined in Invite.Token
+#        Default: 0  (Disabled)
+#                 1  (Enabled)
+#
+#    Invite.Token
+#        Password to automatically signup on first login. Must be at least one character
+#
 #    WrongPass.MaxCount
 #        Number of login attemps with wrong password before the account or IP is banned
 #        Default: 0  (Never ban)
@@ -134,6 +142,8 @@ ProcessPriority = 1
 WaitAtStartupError = 0
 RealmsStateUpdateDelay = 20
 StrictVersionCheck = 0
+Invite.Enabled = 0
+Invite.Token = ""
 WrongPass.MaxCount = 0
 WrongPass.BanTime = 600
 WrongPass.BanType = 0

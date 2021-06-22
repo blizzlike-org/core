@@ -32,6 +32,8 @@
 #include "RealmList.h"
 #include "SRP6/SRP6.h"
 
+#include "Accounts/SharedAccountMgr.h"
+
 #include <ctime>
 #include <openssl/md5.h>
 #include <utility>
@@ -173,6 +175,7 @@ std::array<uint8, 16> VersionChallenge = {
 AuthSocket::AuthSocket(boost::asio::io_service &service, std::function<void(Socket *)> closeHandler)
     : Socket(service, std::move(closeHandler)), _status(STATUS_CHALLENGE), _build(0), _accountSecurityLevel(SEC_PLAYER),
       m_timeoutTimer(service) {
+  invited = false;
   m_timeoutTimer.expires_from_now(boost::posix_time::seconds(30));
   m_timeoutTimer.async_wait([&](const boost::system::error_code &error) {
     // Timer was not cancelled, take necessary action.
@@ -462,8 +465,39 @@ bool AuthSocket::_HandleLogonChallenge() {
         }
       }
       delete result;
-    } else // no account
-      pkt << uint8(AUTH_LOGON_FAILED_UNKNOWN_ACCOUNT);
+    } else { // no account
+      if (!sConfig.GetBoolDefault("Invite.Enabled", false)) {
+        pkt << uint8(AUTH_LOGON_FAILED_UNKNOWN_ACCOUNT);
+      } else {
+        SharedAccountMgr accountmgr;
+        std::string inviteToken = sConfig.GetStringDefault("Invite.Token");
+        invited = true;
+        std::string srpuser = _login;
+        std::string srptoken = inviteToken;
+        ;
+
+        accountmgr.normalizeString(srpuser);
+        accountmgr.normalizeString(srptoken);
+
+        srp.CalculateVerifier(accountmgr.CalculateShaPassHash(srpuser, srptoken));
+
+        BigNumber s = srp.GetSalt();
+        srp.CalculateHostPublicEphemeral();
+
+        pkt << uint8(AUTH_LOGON_SUCCESS);
+        pkt.append(srp.GetHostPublicEphemeral().AsByteArray(32), 32);
+        pkt << uint8(1);
+        pkt.append(srp.GetGeneratorModulo().AsByteArray(), 1);
+        pkt << uint8(32);
+        pkt.append(srp.GetPrime().AsByteArray(32), 32);
+        pkt.append(s.AsByteArray(), s.GetNumBytes()); // 32 bytes
+        pkt.append(VersionChallenge.data(), VersionChallenge.size());
+        uint8 securityFlags = 0;
+        pkt << uint8(securityFlags);
+
+        _status = STATUS_LOGON_PROOF;
+      }
+    }
   }
 
   Write((const char *)pkt.contents(), pkt.size());
@@ -539,6 +573,13 @@ bool AuthSocket::_HandleLogonProof() {
       const char data[2] = {CMD_AUTH_LOGON_PROOF, AUTH_LOGON_FAILED_VERSION_INVALID};
       Write(data, sizeof(data));
       return true;
+    }
+
+    if (invited) {
+      SharedAccountMgr accountmgr;
+      if (accountmgr.CreateAccount(_safelogin.c_str(), srp.GetSalt().AsHexStr(), srp.GetVerifier().AsHexStr()) !=
+          AOR_OK)
+        return false;
     }
 
     BASIC_LOG("User '%s' successfully authenticated", _login.c_str());

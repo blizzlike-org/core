@@ -17,6 +17,7 @@
  */
 
 #include "Accounts/AccountMgr.h"
+#include "Accounts/SharedAccountMgr.h"
 #include "Auth/Sha1.h"
 #include "Database/DatabaseEnv.h"
 #include "Entities/ObjectGuid.h"
@@ -203,16 +204,6 @@ AccountOpResult AccountMgr::ChangePassword(uint32 accid, std::string new_passwd)
   return AOR_OK;
 }
 
-uint32 AccountMgr::GetId(std::string username) const {
-  LoginDatabase.escape_string(username);
-  QueryResult *result = LoginDatabase.PQuery("SELECT id FROM account WHERE username = '%s'", username.c_str());
-  if (!result)
-    return 0;
-  uint32 id = (*result)[0].GetUInt32();
-  delete result;
-  return id;
-}
-
 AccountTypes AccountMgr::GetSecurity(uint32 acc_id) {
   QueryResult *result = LoginDatabase.PQuery("SELECT gmlevel FROM account WHERE id = '%u'", acc_id);
   if (result) {
@@ -271,31 +262,4 @@ bool AccountMgr::CheckPassword(uint32 accid, std::string passwd) const {
   }
 
   return false;
-}
-
-bool AccountMgr::normalizeString(std::string &utf8str) {
-  std::wstring wstr_buf;
-  if (!Utf8toWStr(utf8str, wstr_buf))
-    return false;
-
-  if (wstr_buf.size() > MAX_ACCOUNT_STR)
-    return false;
-
-  std::transform(wstr_buf.begin(), wstr_buf.end(), wstr_buf.begin(), wcharToUpperOnlyLatin);
-
-  return WStrToUtf8(wstr_buf, utf8str);
-}
-
-std::string AccountMgr::CalculateShaPassHash(std::string &name, std::string &password) const {
-  Sha1Hash sha;
-  sha.Initialize();
-  sha.UpdateData(name);
-  sha.UpdateData(":");
-  sha.UpdateData(password);
-  sha.Finalize();
-
-  std::string encoded;
-  hexEncodeByteArray(sha.GetDigest(), Sha1Hash::GetLength(), encoded);
-
-  return encoded;
 }

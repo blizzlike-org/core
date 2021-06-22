@@ -118,6 +118,11 @@ set(SRC_GRP_SRP
     SRP6/SRP6.h
 )
 
+set(SRC_GRP_ACCMGR
+    Accounts/SharedAccountMgr.cpp
+    Accounts/SharedAccountMgr.h
+)
+
 set(LIBRARY_SRCS
     ${SRC_GRP_AUTH}
     ${SRC_GRP_CONFIG}
@@ -127,6 +132,7 @@ set(LIBRARY_SRCS
     ${SRC_GRP_METRIC}
     ${SRC_GRP_UTIL}
     ${SRC_GRP_SRP}
+    ${SRC_GRP_ACCMGR}
     ${SRC_GRP_NETWORK}
     ${SRC_GRP_MT}
     Common.cpp

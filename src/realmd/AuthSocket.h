@@ -71,6 +71,7 @@ private:
 
   SRP6 srp;
   BigNumber _reconnectProof;
+  bool invited;
 
   eStatus _status;
 
