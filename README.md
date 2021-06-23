@@ -1,67 +1,105 @@
-# C(ontinued)-MaNGOS -- README
-[![Windows](../../actions/workflows/windows.yml/badge.svg)](../../actions/workflows/windows.yml) [![Ubuntu](../../actions/workflows/ubuntu.yml/badge.svg)](../../actions/workflows/ubuntu.yml) [![MacOS](../../actions/workflows/macos.yml/badge.svg)](../../actions/workflows/macos.yml)
+# [unknown]
+The [unknown] is a fork of the [CMaNGOS Project](https://github.com/cmangos). It aims to become a fully localized core offering multiple expansions within the same codebase.
+Code in this repository is formatted to match the [LLVM Coding Standards](https://llvm.org/docs/CodingStandards.html), with an exception increasing the max. column size to 120 characters.
+There is no Windows or MacOS support for this core and any reference to those are removed on sight. The reason behind this is to clear up the build structure aswell as getting 
+rid of built-in headers and libraries that should rather be part of your operating system than being bundled with the repository.
 
-This file is part of the CMaNGOS Project. See [AUTHORS](AUTHORS.md) and [COPYRIGHT](COPYRIGHT.md) files for Copyright information
+## Getting started
 
-## Welcome to C(ontinued)-MaNGOS
+### Prepare/Dependencies
+Make sure to have all required dependencies installed. ArchLinux is used in this example.
+For debian based systems use `apt` instead of `pacman`, and replace the package names
+with the corresponding ones of your distribution.
 
-CMaNGOS is a free project with the following goal:
+    pacman -Sy mariadb base-devel boost cmake git
 
-  **Doing Emulation Right!**
+    mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+    systemctl --now enable mariadb
+    mysql_secure_installation
 
-This means, we want to focus on:
+You can now fetch the latest repository:
 
-* Doing
-  * This project is focused on developing software!
-  * Also there are many other aspects that need to be done and are
-    considered equally important.
-  * Anyone who wants to do stuff is very welcome to do so!
+    mkdir blizzlike; cd blizzlike
+    git clone https://github.com/blizzlike-org/core source
 
-* Emulation
-  * This project is about developing a server software that is able to
-    emulate a well known MMORPG service.
+### Database
+The first command will create all empty databases and also a new user
+to your mysql database (mangos:mangos). You might want to delete or
+change its password later.
 
-* Right
-  * Our goal must always be to provide the best code that we can.
-  * Being 'right' is defined by the behaviour of the system
-    we want to emulate.
-  * Developing things right also includes documenting and discussing
-    _how_ to do things better, hence...
-  * Learning and teaching are very important in our view, and must
-    always be a part of what we do.
+**core database**:
 
-To be able to accomplish these goals, we support and promote:
+    mysql -u'root' -p < source/sql/create/db_create_mysql.sql
+    mysql -u'mangos' -p'mangos' realmd < source/sql/base/realmd.sql
+    mysql -u'mangos' -p'mangos' characters < source/sql/base/characters.sql
+    mysql -u'mangos' -p'mangos' tbc < source/sql/base/tbc.sql
+    mysql -u'mangos' -p'mangos' tbc < source/sql/base/tbc_locales.sql
 
-* Freedom
-  * of our work: Our work - including our code - is released under the GPL.
-    So everybody is free to use and contribute to this open source project.
-  * for our developers and contributors on things that interest them.
-    No one here is telling anybody _what_ to do.
-    If you want somebody to do something for you, pay them,
-    but we are here to enjoy.
-  * to have FUN with developing.
+**database updates**:
 
-* A friendly environment
-  * We try to leave personal issues behind us.
-  * We only argue about content and not about thin air!
-  * We follow the [Netiquette](http://tools.ietf.org/html/rfc1855).
+    cat source/sql/updates/realmd/*.sql | mysql -u"mangos" -p"mangos" realmd
+    cat source/sql/updates/characters/*.sql | mysql -u"mangos" -p"mangos" characters
+    cat source/sql/updates/tbc/*.sql | mysql -u"mangos" -p"mangos" tbc
+    cat source/sql/updates/tbc_locales/*.sql | mysql -u"mangos" -p"mangos" tbc
 
--- The C(ontinued)-MaNGOS Team!
+### Compile
+Change `make -j8` to the number of CPUs/Threads you have. The higher the number,
+the more threads will be utilizied to compile the core.
 
-## Further information
+    mkdir -p build; cd build
+    cmake ../source \
+        -DCMAKE_INSTALL_PREFIX=../install \
+        -DBUILD_EXTRACTORS=1 \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++
 
-  You can find further information about CMaNGOS at the following places:
-  * [CMaNGOS Discord](https://discord.gg/Dgzerzb)
-  * [GitHub repositories](https://github.com/cmangos/)
-  * [Issue tracker](https://github.com/cmangos/issues/issues)
-  * [Pull Requests](https://github.com/cmangos/mangos-tbc/pulls)
-  * [Wiki](https://github.com/cmangos/issues/wiki) with additional information on installation
-  * [Contributing Guidelines](CONTRIBUTING.md)
-  * Documentation can be found in the doc/ subdirectory and on the GitHub wiki
+    make -j12
+    make install
+
+### Game Files
+The emulator needs access to several game files found in the 2.4.3 client.
+Such as maps, movement paths, spells and other data. The following commands
+will extract all the required data and also generate movement maps. In this example
+it is assumed, the game directory is in `~/games/Burning\ Crusade/`
+
+    cd install/bin
+    cp tools/* ~/games/Burning\ Crusade/
+    cd ~/games/Burning\ Crusade/
+    chmod +x ExtractResources.sh MoveMapGen.sh
+    ./ExtractResources.sh
+
+This process will now take a long time (1-4 hours). Once done, copy all files to
+your blobs directory (which should be right beside the build and the source directory)
+
+    ls -1 blobs/ 
+      Buildings
+      Cameras
+      dbc
+      maps
+      mmaps
+      vmaps
+
+### Starting
+To launch the server, it is required to have all game-files (blobs) in the right
+directory and also to have the configuration files set up properly.
+
+    cd install
+    cp etc/mangosd.conf.dist etc/mangosd.conf
+    cp etc/realmd.conf.dist etc/realmd.conf
+    vim etc/mangosd.conf etc/realmd.conf
+
+    cd bin
+    for obj in ../../blobs/*; do ln -s $obj .; done
+
+    ./realmd &
+    ./mangosd
+
+Hit `<ctrl-c>` to stop the core. Type `fg` and hit `<ctrl+c>` again to stop the realm.
+
 
 ## License
 
-  CMaNGOS is free software; you can redistribute it and/or modify
+  [unknown] is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
@@ -91,12 +129,12 @@ To be able to accomplish these goals, we support and promote:
 
   Any World of Warcraft® content and materials mentioned or referenced are copyrighted by
   Blizzard Entertainment, Inc. or its licensors.
-  CMaNGOS project is not affiliated with Blizzard Entertainment, Inc. or its licensors.
+  [unknown] project is not affiliated with Blizzard Entertainment, Inc. or its licensors.
 
-  Some third-party libraries CMaNGOS uses have other licenses, that must be
+  Some third-party libraries [unknown] uses have other licenses, that must be
   upheld.  These libraries are located within the dep/ directory
 
-  In addition, as a special exception, the CMaNGOS project
+  In addition, as a special exception, the [unknown] project
   gives permission to link the code of its release of MaNGOS with the
   OpenSSL project's "OpenSSL" library (or with modified versions of it
   that use the same license as the "OpenSSL" library), and distribute
