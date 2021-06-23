@@ -78,6 +78,11 @@ if (MSVC)
   set_target_properties(mmaplib PROPERTIES FOLDER "Dependencies")
 endif()
 
+target_compile_definitions(vmaplib PUBLIC -DBUILD_TBC="${BUILD_TBC}")
+target_compile_definitions(vmaplib PUBLIC -DBUILD_WOTLK="${BUILD_WOTLK}")
+target_compile_definitions(mmaplib PUBLIC -DBUILD_TBC="${BUILD_TBC}")
+target_compile_definitions(mmaplib PUBLIC -DBUILD_WOTLK="${BUILD_WOTLK}")
+
 if (BUILD_EXTRACTORS)
   add_executable(${EXECUTABLE_NAME} ./src/generator.cpp ./src/IntermediateValues.h ./src/IntermediateValues.cpp ./src/MapBuilder.h ./src/MapBuilder.cpp ./src/MMapCommon.h ./src/TerrainBuilder.cpp ./src/TerrainBuilder.h ./src/VMapExtensions.cpp )
 

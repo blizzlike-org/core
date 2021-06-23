@@ -102,6 +102,12 @@ if(UNIX)
   endif()
 endif()
 
+if(BUILD_TBC)
+add_definitions(-DBUILD_TBC)
+elseif(BUILD_WOTLK)
+add_definitions(-DBUILD_WOTLK)
+endif()
+
 # Define BUILD_SCRIPTDEV if need
 if (BUILD_SCRIPTDEV)
   add_definitions(-DBUILD_SCRIPTDEV)

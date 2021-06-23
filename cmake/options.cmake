@@ -13,6 +13,9 @@ option(BUILD_RECASTDEMOMOD  "Build map/vmap/mmap viewer"            OFF)
 option(BUILD_GIT_ID         "Build git_id"                          OFF)
 option(BUILD_DOCS           "Build documentation with doxygen"      OFF)
 
+option(BUILD_TBC            "Build TBC flavor"                      ON)
+option(BUILD_WOTLK          "Build WOTLK flavor"                    OFF)
+
 # TODO: options that should be checked/created:
 #option(CLI                  "With CLI"                              ON)
 #option(RA                   "With Remote Access"                    OFF)

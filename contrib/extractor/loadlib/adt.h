@@ -7,7 +7,11 @@
 #define CHUNKSIZE ((TILESIZE) / 16.0f)
 #define UNITSIZE (CHUNKSIZE / 8.0f)
 
+#ifdef BUILD_TBC
 enum LiquidType { LIQUID_TYPE_MAGMA = 0, LIQUID_TYPE_OCEAN = 1, LIQUID_TYPE_SLIME = 2, LIQUID_TYPE_WATER = 3 };
+#elif BUILD_WOTLK
+enum LiquidType { LIQUID_TYPE_WATER = 0, LIQUID_TYPE_OCEAN = 1, LIQUID_TYPE_MAGMA = 2, LIQUID_TYPE_SLIME = 3 };
+#endif
 
 //**************************************************************************************
 // ADT file class

@@ -38,6 +38,8 @@ include_directories(
 add_executable(${EXECUTABLE_NAME} ${AD_SOURCE})
 
 target_link_libraries(${EXECUTABLE_NAME} mpqlib)
+target_compile_definitions(${EXECUTABLE_NAME} PUBLIC -DBUILD_TBC="${BUILD_TBC}")
+target_compile_definitions(${EXECUTABLE_NAME} PUBLIC -DBUILD_WOTLK="${BUILD_WOTLK}")
 
 if(MSVC)
   # Define OutDir to source/bin/(platform)_(configuaration) folder.

@@ -5,6 +5,7 @@
 struct GridMapFileHeader {
   uint32 mapMagic;
   uint32 versionMagic;
+  uint32 buildMagic;
   uint32 areaMapOffset;
   uint32 areaMapSize;
   uint32 heightMapOffset;
@@ -59,12 +60,21 @@ enum GridMapLiquidStatus {
 
 // defined in DBC and left shifted for flag usage
 #define MAP_LIQUID_TYPE_NO_WATER 0x00
+#ifdef BUILD_TBC
 #define MAP_LIQUID_TYPE_MAGMA 0x01
 #define MAP_LIQUID_TYPE_OCEAN 0x02
 #define MAP_LIQUID_TYPE_SLIME 0x04
 #define MAP_LIQUID_TYPE_WATER 0x08
 
 #define MAP_ALL_LIQUIDS (MAP_LIQUID_TYPE_WATER | MAP_LIQUID_TYPE_MAGMA | MAP_LIQUID_TYPE_OCEAN | MAP_LIQUID_TYPE_SLIME)
+#elif BUILD_WOTLK
+#define MAP_LIQUID_TYPE_WATER 0x01
+#define MAP_LIQUID_TYPE_OCEAN 0x02
+#define MAP_LIQUID_TYPE_MAGMA 0x04
+#define MAP_LIQUID_TYPE_SLIME 0x08
+
+#define MAP_ALL_LIQUIDS (MAP_LIQUID_TYPE_WATER | MAP_LIQUID_TYPE_OCEAN | MAP_LIQUID_TYPE_MAGMA | MAP_LIQUID_TYPE_SLIME)
+#endif
 
 #define MAP_LIQUID_TYPE_DEEP_WATER 0x10
 #define MAP_LIQUID_TYPE_WMO_WATER 0x20
