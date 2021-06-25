@@ -23,6 +23,9 @@ add_executable(${EXECUTABLE_NAME} adtfile.cpp dbcfile.cpp gameobject_extract.cpp
 
 target_link_libraries(${EXECUTABLE_NAME} mpqlib g3dlite)
 
+target_compile_definitions(${EXECUTABLE_NAME} PUBLIC -DBUILD_TBC="${BUILD_TBC}")
+target_compile_definitions(${EXECUTABLE_NAME} PUBLIC -DBUILD_WOTLK="${BUILD_WOTLK}")
+
 if(MSVC)
   # Define OutDir to source/bin/(platform)_(configuaration) folder.
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${DEV_BIN_DIR}/Extractors")

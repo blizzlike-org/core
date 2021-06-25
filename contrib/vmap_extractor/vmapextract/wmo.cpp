@@ -405,6 +405,7 @@ int WMOGroup::ConvertToVMAPGroupWmo(FILE *output, WMORoot *rootWMO, bool pPrecis
     if (liquidEntry && liquidEntry < 21) {
       switch (((uint8)liquidEntry - 1) & 3) {
       case 0:
+#ifdef BUILD_TBC
         liquidEntry = ((mogpFlags & 0x80000) != 0) + 1;
         if (liquidEntry == 1) // water type
         {
@@ -413,18 +414,33 @@ int WMOGroup::ConvertToVMAPGroupWmo(FILE *output, WMORoot *rootWMO, bool pPrecis
             liquidEntry = 41;
           }
         }
+#elif BUILD_WOTLK
+        liquidEntry = ((mogpFlags & 0x80000) != 0) + 13;
+#endif
         break;
       case 1:
+#ifdef BUILD_TBC
         liquidEntry = 2; // ocean
+#elif BUILD_WOTLK
+        liquidEntry = 14;
+#endif
         break;
       case 2:
+#ifdef BUILD_TBC
         liquidEntry = 3; // magma
+#elif BUILD_WOTLK
+        liquidEntry = 19;
+#endif
         break;
       case 3:
+#ifdef BUILD_TBC
         if (filename.find("Stratholme_raid") != string::npos) {
           liquidEntry = 21; // Naxxramas slime
         } else
           liquidEntry = 4; // Normal slime
+#elif BUILD_WOTLK
+        liquidEntry = 20;
+#endif
         break;
       default:
         break;
