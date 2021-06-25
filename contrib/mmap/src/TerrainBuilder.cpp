@@ -91,10 +91,14 @@ bool TerrainBuilder::loadMap(uint32 mapID, uint32 tileX, uint32 tileY, MeshData 
 
   GridMapHeightHeader hheader;
   fseek(mapFile, fheader.heightMapOffset, SEEK_SET);
-  fread(&hheader, sizeof(GridMapHeightHeader), 1, mapFile);
 
-  bool haveTerrain = !(hheader.flags & MAP_HEIGHT_NO_HEIGHT);
-  bool haveLiquid = fheader.liquidMapOffset && !m_skipLiquid;
+  bool haveTerrain = false;
+  bool haveLiquid = false;
+
+  if (fread(&hheader, sizeof(GridMapHeightHeader), 1, mapFile) == 1) {
+    haveTerrain = !(hheader.flags & MAP_HEIGHT_NO_HEIGHT);
+    haveLiquid = fheader.liquidMapOffset && !m_skipLiquid;
+  }
 
   // no data in this map file
   if (!haveTerrain && !haveLiquid) {
@@ -761,25 +765,27 @@ void TerrainBuilder::loadOffMeshConnections(uint32 mapID, uint32 tileX, uint32 t
     float p0[3], p1[3];
     int mid, tx, ty;
     float size;
-    if (10 != sscanf(buf, "%d %d,%d (%f %f %f) (%f %f %f) %f", &mid, &tx, &ty, &p0[0], &p0[1], &p0[2], &p1[0], &p1[1],
-                     &p1[2], &size))
+    if (sscanf(buf, "%d %d,%d (%f %f %f) (%f %f %f) %f", &mid, &tx, &ty, &p0[0], &p0[1], &p0[2], &p1[0], &p1[1], &p1[2],
+                   &size) != 10)
       continue;
 
-    if (mapID == mid, tileX == tx, tileY == ty) {
-      meshData.offMeshConnections.append(p0[1]);
-      meshData.offMeshConnections.append(p0[2]);
-      meshData.offMeshConnections.append(p0[0]);
+    if (mapID != mid || tileX != tx || tileY != ty)
+      continue;
 
-      meshData.offMeshConnections.append(p1[1]);
-      meshData.offMeshConnections.append(p1[2]);
-      meshData.offMeshConnections.append(p1[0]);
+    meshData.offMeshConnections.append(p0[1]);
+    meshData.offMeshConnections.append(p0[2]);
+    meshData.offMeshConnections.append(p0[0]);
 
-      meshData.offMeshConnectionDirs.append(1);    // 1 - both direction, 0 - one sided
-      meshData.offMeshConnectionRads.append(size); // agent size equivalent
-      // can be used same way as polygon flags
-      meshData.offMeshConnectionsAreas.append((unsigned char)0xFF);
-      meshData.offMeshConnectionsFlags.append((unsigned short)0xFF); // all movement masks can make this path
-    }
+    meshData.offMeshConnections.append(p1[1]);
+    meshData.offMeshConnections.append(p1[2]);
+    meshData.offMeshConnections.append(p1[0]);
+
+    meshData.offMeshConnectionDirs.append(1);    // 1 - both direction, 0 - one sided
+    meshData.offMeshConnectionRads.append(size); // agent size equivalent
+
+    // can be used same way as polygon flags
+    meshData.offMeshConnectionsAreas.append((unsigned char)0xFF);
+    meshData.offMeshConnectionsFlags.append((unsigned short)0xFF); // all movement masks can make this path
   }
 
   delete[] buf;

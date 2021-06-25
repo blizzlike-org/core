@@ -48,7 +48,11 @@ static const float INVALID_MAP_LIQ_HEIGHT_MAX = 5000.0f;
 // see following files:
 // contrib/extractor/system.cpp
 // src/game/GridMap.cpp
+#ifdef BUILD_TBC
 static char const *MAP_VERSION_MAGIC = "s1.4";
+#elif BUILD_WOTLK
+static char const *MAP_VERSION_MAGIC = "v1.4";
+#endif
 
 struct MeshData {
   G3D::Array<float> solidVerts;
