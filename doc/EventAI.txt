@@ -24,7 +24,7 @@ creature_id                     Creature ID which should trigger this event (Thi
 event_type                      The type of event you want to script. (see "Event Types" below for different values)
 event_inverse_phase_mask        Mask with phases this event should NOT trigger in* (See footnote for more details on using any other value then 0)
 event_chance                    Percentage chance of triggering the event (1 - 100)
-event_flags                     Event Flags (Used to select Repeatable or Dungeon Heroic Mode)... See "Event Flags" Below For Defined Values
+event_flags                     Event Flags (Used to select Repeatable or Dungeon/Raid Difficulty Level)... See "Event Flags" Below For Defined Values
 event_param1                    Variables for the event (depends on event_type)
 event_param2                    Variables for the event (depends on event_type)
 event_param3                    Variables for the event (depends on event_type)

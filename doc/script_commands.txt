@@ -176,6 +176,7 @@ Defining a buddy could be done in several way:
 
  3 SCRIPT_COMMAND_MOVE_TO                   resultingSource = Creature
                                             If position is very near to current position, or x=y=z=0, then only orientation is changed
+											If x=y=0 and z !=0, then only Z position is changed (new value will be added to current 'z' position)
                                             * datalong2 = travel_speed*100 (use 0 for creature default movement)
                                             * data_flags & SCRIPT_FLAG_COMMAND_ADDITIONAL: teleport unit to position
                                             * x/y/z/o
@@ -228,6 +229,7 @@ Defining a buddy could be done in several way:
 
 14 SCRIPT_COMMAND_REMOVE_AURA               resultingSource = Unit
                                             * datalong = spell_id
+                                            * data_flags & SCRIPT_FLAG_COMMAND_ADDITIONAL: remove aura by caster spell from script target
                                             warning - if used with a channeled spell will not interrupt channel
 
 15 SCRIPT_COMMAND_CAST_SPELL                resultingSource = Unit, cast spell at resultingTarget = Unit
@@ -313,6 +315,8 @@ Defining a buddy could be done in several way:
                                             * datalong: 0/1 unpause/pause waypoint movement
 
 33 SCRIPT_COMMAND_RESERVED_1                reserved for 3.x and later. Do not use!
+33 SCRIPT_COMMAND_XP_USER                   source or target with Player
+                                            * datalong=bool 0=off, 1=on
 
 34 SCRIPT_COMMAND_TERMINATE_COND            * datalong = condition_id, datalong2 = fail-quest (if provided this quest will be failed for a player)
                                             * !(data_flags & SCRIPT_FLAG_COMMAND_ADDITIONAL): terminate when condition is true
