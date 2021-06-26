@@ -92,9 +92,14 @@ void CreatureEventAI::GetAIInformation(ChatHandler &reader) {
   }
 }
 
-// For Non Dungeon map only allow non-difficulty flags or EFLAG_NORMAL mode
+// For Non Dungeon map only allow non-difficulty flags or EFLAG_NORMAL (EFLAG_DIFFICULTY_0) mode
 inline bool IsEventFlagsFitForNormalMap(uint8 eFlags) {
+#ifdef BUILD_TBC
   return !(eFlags & (EFLAG_NORMAL | EFLAG_HEROIC)) || (eFlags & EFLAG_NORMAL);
+#elif BUILD_WOTLK
+  return !(eFlags & (EFLAG_DIFFICULTY_0 | EFLAG_DIFFICULTY_1 | EFLAG_DIFFICULTY_2 | EFLAG_DIFFICULTY_3)) ||
+         (eFlags & EFLAG_DIFFICULTY_0);
+#endif
 }
 
 CreatureEventAI::CreatureEventAI(Creature *creature)
@@ -121,7 +126,11 @@ void CreatureEventAI::InitAI() {
         continue;
 #endif
       // only check normal / heroic distinction if at least one is set, if none is set, event should occur at all times
+#ifdef BUILD_TBC
       if (i.event_flags & (EFLAG_NORMAL | EFLAG_HEROIC)) {
+#elif BUILD_WOTLK
+      if (i.event_flags & (EFLAG_DIFFICULTY_ALL)) {
+#endif
         if (m_creature->GetMap()->IsDungeon()) {
           if ((1 << (m_creature->GetMap()->GetSpawnMode() + 1)) & i.event_flags) {
             ++events_count;
@@ -145,7 +154,11 @@ void CreatureEventAI::InitAI() {
           continue;
 #endif
         bool storeEvent = false;
+#ifdef BUILD_TBC
         if (i.event_flags & (EFLAG_NORMAL | EFLAG_HEROIC)) {
+#elif BUILD_WOTLK
+        if (i.event_flags & (EFLAG_DIFFICULTY_ALL)) {
+#endif
           if (m_creature->GetMap()->IsDungeon()) {
             if ((1 << (m_creature->GetMap()->GetSpawnMode() + 1)) & i.event_flags)
               storeEvent = true;
@@ -828,10 +841,14 @@ bool CreatureEventAI::ProcessAction(CreatureEventAI_Action const &action, uint32
                            action.type, action.threat_single.target);
     break;
   case ACTION_T_THREAT_ALL_PCT: {
+#ifdef BUILD_TBC
     ThreatList const &threatList = m_creature->getThreatManager().getThreatList();
     for (auto i : threatList)
       if (Unit *Temp = m_creature->GetMap()->GetUnit(i->getUnitGuid()))
         m_creature->getThreatManager().modifyThreatPercent(Temp, action.threat_all_pct.percent);
+#ifdef BUILD_WOTLK
+    m_creature->getThreatManager().modifyAllThreatPercent(action.threat_all_pct.percent);
+#endif
     break;
   }
   case ACTION_T_QUEST_EVENT: {

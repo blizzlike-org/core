@@ -796,7 +796,13 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts() {
             // used TARGET_T_ACTION_INVOKER, but likely should be _INVOKER_OWNER instead
             if (action.cast.target == TARGET_T_ACTION_INVOKER &&
                 (IsSpellHaveEffect(spell, SPELL_EFFECT_QUEST_COMPLETE) ||
+#ifdef BUILD_WOTLK
+                 IsSpellHaveEffect(spell, SPELL_EFFECT_CREATE_RANDOM_ITEM) ||
+#endif
                  IsSpellHaveEffect(spell, SPELL_EFFECT_DUMMY) ||
+#ifdef BUILD_WOTLK
+                 IsSpellHaveEffect(spell, SPELL_EFFECT_KILL_CREDIT_PERSONAL) ||
+#endif
                  IsSpellHaveEffect(spell, SPELL_EFFECT_KILL_CREDIT_GROUP)))
               sLog.outErrorEventAI("Event %u Action %u has TARGET_T_ACTION_INVOKER(%u) target type, but should have "
                                    "TARGET_T_ACTION_INVOKER_OWNER(%u).",
@@ -828,13 +834,21 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts() {
           IsValidTargetType(temp.event_type, action.type, action.summon.target, i, j + 1);
           break;
         case ACTION_T_THREAT_SINGLE:
+#ifdef BUILD_TBC
           if (std::abs(action.threat_single.value) > 100 && !action.threat_single.isDirect)
+#elif BUILD_WOTLK
+          if (std::abs(action.threat_single.value) > 101 && !action.threat_single.isDirect)
+#endif
             sLog.outErrorEventAI("Event %u Action %u uses invalid percent value %u.", i, j + 1,
                                  action.threat_single.value);
           IsValidTargetType(temp.event_type, action.type, action.threat_single.target, i, j + 1);
           break;
         case ACTION_T_THREAT_ALL_PCT:
+#ifdef BUILD_TBC
           if (std::abs(action.threat_all_pct.percent) > 100)
+#elif BUILD_WOTLK
+          if (std::abs(action.threat_all_pct.percent) > 101)
+#endif
             sLog.outErrorEventAI("Event %u Action %u uses invalid percent value %u.", i, j + 1,
                                  action.threat_all_pct.percent);
           break;
@@ -1059,7 +1073,11 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts() {
           if (action.changeMovement.asDefault > 1) {
             sLog.outErrorEventAI("Event %u Action %u uses invalid default movement setting %u. Setting to 0.", i, j + 1,
                                  action.changeMovement.asDefault);
+#ifdef BUILD_TBC
             action.changeMovement.asDefault = 0;
+#elif BUILD_WOTLK
+            action.deathPrevention.state = 0;
+#endif
           }
           break;
         case ACTION_T_SET_REACT_STATE:
