@@ -43,6 +43,7 @@ enum {
   GO_DRAKKISATH_DOOR_1 = 175946,
   GO_DRAKKISATH_DOOR_2 = 175947,
 
+#ifdef BUILD_TBC
   // upper spire entrance
   GO_DRAGONSPINE = 164725,
   GO_BRAZIER_1 = 175528,
@@ -51,6 +52,7 @@ enum {
   GO_BRAZIER_4 = 175531,
   GO_BRAZIER_5 = 175532,
   GO_BRAZIER_6 = 175533,
+#endif
 
   GO_ROOM_7_RUNE = 175194,
   GO_ROOM_3_RUNE = 175195,
@@ -70,7 +72,9 @@ enum {
   GO_EMBERSEER_RUNE_6 = 175271,
   GO_EMBERSEER_RUNE_7 = 175272,
 
+#ifdef BUILD_TBC
   ITEM_SEAL_OF_ASCENSION = 12344,
+#endif
 
   MAX_STADIUM_WAVES = 7,
   MAX_STADIUM_MOBS_PER_WAVE = 5,
@@ -156,7 +160,9 @@ public:
   void DoUseEmberseerRunes(bool bReset = false);
   void DoProcessEmberseerEvent();
 
+#ifdef BUILD_TBC
   void DoOpenUpperDoorIfCan(Player *pPlayer);
+#endif
   void DoSortRoomEventMobs();
   void GetIncarceratorGUIDList(GuidList &lList) const { lList = m_lIncarceratorGUIDList; }
 
@@ -172,13 +178,17 @@ private:
   void DoSendNextStadiumWave();
   void DoSendNextFlamewreathWave();
 
+#ifdef BUILD_TBC
   bool m_bUpperDoorOpened;
+#endif
 
   uint32 m_auiEncounter[MAX_ENCOUNTER];
   std::string m_strInstData;
 
+#ifdef BUILD_TBC
   uint32 m_uiDragonspineDoorTimer;
   uint32 m_uiDragonspineGoCount;
+#endif
   uint32 m_uiFlamewreathEventTimer;
   uint32 m_uiFlamewreathWaveCount;
   uint32 m_uiStadiumEventTimer;

@@ -298,7 +298,11 @@ void instance_zulaman::OnObjectCreate(GameObject *pGo) {
 void instance_zulaman::FillInitialWorldStates(ByteBuffer &data, uint32 &count, uint32 /*zoneId*/, uint32 /*areaId*/) {
   FillInitialWorldStateData(data, count, WORLD_STATE_ZUL_AMAN_EVENT_RUN_IS_ACTIVE,
                             GetData(TYPE_EVENT_RUN) == IN_PROGRESS);
+#ifdef BUILD_TBC
   FillInitialWorldStateData(data, count, WORLD_STATE_ZUL_AMAN_TIME_COUNTER, GetData(TYPE_RUN_EVENT_TIME));
+#elif BUILD_WOTLK
+  FillInitialWorldStateData(data, count, WORLD_STATE_MOUNT_HYJAL_ENEMYCOUNT, GetData(TYPE_RUN_EVENT_TIME));
+#endif
 }
 
 void instance_zulaman::SetData(uint32 type, uint32 data) {
@@ -665,7 +669,7 @@ void instance_zulaman::SpawnMalacrass() {
   if (GetSingleCreatureFromStorage(NPC_MALACRASS, true))
     return;
 
-  // Summon Malacrass
+  // Summon Malacrass (Archimonde)
   if (Player *pPlayer = GetPlayerInMap())
     pPlayer->SummonCreature(NPC_MALACRASS, aMalacrassSpawnLoc[0], aMalacrassSpawnLoc[1], aMalacrassSpawnLoc[2],
                             aMalacrassSpawnLoc[3], TEMPSPAWN_MANUAL_DESPAWN, 0);

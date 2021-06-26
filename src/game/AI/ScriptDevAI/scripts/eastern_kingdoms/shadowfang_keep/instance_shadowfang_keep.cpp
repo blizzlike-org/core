@@ -48,7 +48,12 @@ static const DialogueEntry aArugalDialogue[] = {
     {0, 0, 0},
 };
 
+#ifdef BUILD_TBC
 instance_shadowfang_keep::instance_shadowfang_keep(Map *map) : ScriptedInstance(map), DialogueHelper(aArugalDialogue) {
+#elif BUILD_WOTLK
+instance_shadowfang_keep::instance_shadowfang_keep(Map *map)
+    : ScriptedInstance(map), DialogueHelper(aArugalDialogue), m_uiApothecaryDead(0), m_uiApothecaryResetTimer(0) {
+#endif
   Initialize();
 }
 
@@ -62,6 +67,13 @@ void instance_shadowfang_keep::OnCreatureCreate(Creature *creature) {
   case NPC_ASH:
   case NPC_ADA:
   case NPC_FENRUS:
+#ifdef BUILD_WOTLK
+  case NPC_HUMMEL:
+  case NPC_FRYE:
+  case NPC_BAXTER:
+  case NPC_APOTHECARY_GENERATOR:
+  case NPC_VALENTINE_BOSS_MGR:
+#endif
   case NPC_MASTER_NANDOS:
     break;
   case NPC_VINCENT:
@@ -79,6 +91,11 @@ void instance_shadowfang_keep::OnCreatureCreate(Creature *creature) {
     if (creature->GetPositionZ() > nandosMovement.fZ && !creature->IsTemporarySummon())
       m_lNandosWolvesGuids.push_back(creature->GetObjectGuid());
     break;
+#ifdef BUILD_WOTLK
+  case NPC_CROWN_APOTHECARY:
+    m_lCrownApothecaryGuids.push_back(creature->GetObjectGuid());
+    return;
+#endif
   case NPC_ARUGAL:
     creature->SetVisibility(VISIBILITY_OFF);
     break;
@@ -91,8 +108,44 @@ void instance_shadowfang_keep::OnCreatureCreate(Creature *creature) {
   m_npcEntryGuidStore[creature->GetEntry()] = creature->GetObjectGuid();
 }
 
+#ifdef BUILD_WOTLK
+void instance_shadowfang_keep::OnObjectCreate(GameObject *go) {
+  switch (go->GetEntry()) {
+  case GO_COURTYARD_DOOR:
+    if (m_auiEncounter[0] == DONE)
+      go->SetGoState(GO_STATE_ACTIVE);
+    break;
+  // For this we ignore voidwalkers, because if the server restarts
+  // They won't be there, but Fenrus is dead so the door can't be opened!
+  case GO_SORCERER_DOOR:
+    if (m_auiEncounter[2] == DONE)
+      go->SetGoState(GO_STATE_ACTIVE);
+    break;
+  case GO_ARUGAL_DOOR:
+    if (m_auiEncounter[3] == DONE)
+      go->SetGoState(GO_STATE_ACTIVE);
+    break;
+  case GO_ARUGAL_FOCUS:
+  case GO_APOTHECARE_VIALS:
+  case GO_CHEMISTRY_SET:
+    break;
+
+  default:
+    return;
+  }
+  m_goEntryGuidStore[go->GetEntry()] = go->GetObjectGuid();
+}
+#endif
+
 void instance_shadowfang_keep::OnCreatureDeath(Creature *creature) {
   switch (creature->GetEntry()) {
+#ifdef BUILD_WOTLK
+  // Instance data is set to SPECIAL because the encounter depends on multiple bosses
+  case NPC_FRYE:
+  case NPC_BAXTER:
+    SetData(TYPE_APOTHECARY, SPECIAL);
+    break;
+#endif
   case NPC_LUPINE_HORROR:
   case NPC_WOLFGUARD_WORG:
   case NPC_BLEAK_WORG:
@@ -117,6 +170,7 @@ void instance_shadowfang_keep::OnCreatureDeath(Creature *creature) {
   }
 }
 
+#ifdef BUILD_TBC
 void instance_shadowfang_keep::OnObjectCreate(GameObject *go) {
   switch (go->GetEntry()) {
   case GO_COURTYARD_DOOR:
@@ -141,6 +195,32 @@ void instance_shadowfang_keep::OnObjectCreate(GameObject *go) {
   }
   m_goEntryGuidStore[go->GetEntry()] = go->GetObjectGuid();
 }
+#elif BUILD_WOTLK
+oid instance_shadowfang_keep::OnCreatureEvade(Creature *creature) {
+  switch (creature->GetEntry()) {
+  case NPC_HUMMEL:
+  case NPC_FRYE:
+  case NPC_BAXTER:
+    SetData(TYPE_APOTHECARY, FAIL);
+    break;
+  }
+}
+
+void instance_shadowfang_keep::OnCreatureRespawn(Creature *creature) {
+  switch (creature->GetEntry()) {
+  case NPC_CRAZED_APOTHECARY:
+    if (Creature *hummel = GetSingleCreatureFromStorage(NPC_HUMMEL)) {
+      if (hummel->GetVictim())
+        creature->AI()->AttackStart(hummel->GetVictim());
+    }
+    break;
+  case NPC_VALENTINE_VIAL_BUNNY:
+    creature->AI()->SetReactState(REACT_PASSIVE);
+    creature->SetCanEnterCombat(false);
+    break;
+  }
+}
+#endif
 
 void instance_shadowfang_keep::DoSpeech() {
   Creature *ada = GetSingleCreatureFromStorage(NPC_ADA);
@@ -189,14 +269,55 @@ void instance_shadowfang_keep::SetData(uint32 type, uint32 data) {
         DoUseDoorOrButton(GO_SORCERER_DOOR);
     }
     break;
+#ifdef BUILD_WOTLK
+ case TYPE_APOTHECARY:
+    // Reset apothecary counter on fail
+    if (data == IN_PROGRESS)
+      m_uiApothecaryDead = 0;
+    else if (data == FAIL) {
+      // despawn bosses and reset on timer
+      if (Creature *pBoss = GetSingleCreatureFromStorage(NPC_HUMMEL))
+        pBoss->ForcedDespawn();
+      if (Creature *pBoss = GetSingleCreatureFromStorage(NPC_BAXTER))
+        pBoss->ForcedDespawn();
+      if (Creature *pBoss = GetSingleCreatureFromStorage(NPC_FRYE))
+        pBoss->ForcedDespawn();
+
+      m_uiApothecaryResetTimer = 30000;
+    }
+
+    // count dead apothecaries
+    if (data == SPECIAL) {
+      ++m_uiApothecaryDead;
+
+      // Set Hummel as lootable only when the others are dead
+      if (m_uiApothecaryDead == MAX_APOTHECARY) {
+        if (Creature *pHummel = GetSingleCreatureFromStorage(NPC_HUMMEL)) {
+          pHummel->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+          pHummel->Suicide();
+        }
+
+        SetData(TYPE_APOTHECARY, DONE);
+      }
+    }
+    // We don't want to store the SPECIAL data
+    else
+      m_auiEncounter[6] = data;
+    break;
+#endif
   }
 
   if (data == DONE) {
     OUT_SAVE_INST_DATA;
 
     std::ostringstream saveStream;
+#ifdef BUILD_TBC
     saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3]
                << " " << m_auiEncounter[4] << " " << m_auiEncounter[5];
+#elif BUILD_WOTLK
+    saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3]
+               << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " " << m_auiEncounter[6];
+#endif
 
     m_strInstData = saveStream.str();
 
@@ -217,6 +338,10 @@ uint32 instance_shadowfang_keep::GetData(uint32 type) const {
     return m_auiEncounter[3];
   case TYPE_INTRO:
     return m_auiEncounter[4];
+#ifdef BUILD_WOTLK
+  case TYPE_APOTHECARY:
+    return m_auiEncounter[6];
+#endif
 
   default:
     return 0;
@@ -232,8 +357,13 @@ void instance_shadowfang_keep::Load(const char *chrIn) {
   OUT_LOAD_INST_DATA(chrIn);
 
   std::istringstream loadStream(chrIn);
+#ifdef BUILD_TBC
   loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] >> m_auiEncounter[4] >>
       m_auiEncounter[5];
+#elif BUILD_WOTLK
+  loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] >> m_auiEncounter[4] >>
+      m_auiEncounter[5] >> m_auiEncounter[6];
+#endif
 
   for (uint32 &i : m_auiEncounter) {
     if (i == IN_PROGRESS)
@@ -242,6 +372,30 @@ void instance_shadowfang_keep::Load(const char *chrIn) {
 
   OUT_LOAD_INST_DATA_COMPLETE;
 }
+
+#ifdef BUILD_TBC
+void instance_shadowfang_keep::Update(uint32 diff) { DialogueUpdate(diff); }
+#elif BUILD_WOTLK
+void instance_shadowfang_keep::Update(uint32 uiDiff) {
+  DialogueUpdate(uiDiff);
+
+  if (m_uiApothecaryResetTimer) {
+    if (m_uiApothecaryResetTimer <= uiDiff) {
+      if (Creature *pBoss = GetSingleCreatureFromStorage(NPC_HUMMEL))
+        pBoss->Respawn();
+      if (Creature *pBoss = GetSingleCreatureFromStorage(NPC_BAXTER))
+        pBoss->Respawn();
+      if (Creature *pBoss = GetSingleCreatureFromStorage(NPC_FRYE))
+        pBoss->Respawn();
+
+      for (const auto &guid : m_lCrownApothecaryGuids)
+        if (Creature *pApothecary = instance->GetCreature(guid))
+          pApothecary->Respawn();
+    } else
+      m_uiApothecaryResetTimer -= uiDiff;
+  }
+}
+#endif
 
 void instance_shadowfang_keep::JustDidDialogueStep(int32 entry) {
   switch (entry) {
@@ -311,8 +465,6 @@ void instance_shadowfang_keep::JustDidDialogueStep(int32 entry) {
     break;
   }
 }
-
-void instance_shadowfang_keep::Update(uint32 diff) { DialogueUpdate(diff); }
 
 InstanceData *GetInstanceData_instance_shadowfang_keep(Map *map) { return new instance_shadowfang_keep(map); }
 

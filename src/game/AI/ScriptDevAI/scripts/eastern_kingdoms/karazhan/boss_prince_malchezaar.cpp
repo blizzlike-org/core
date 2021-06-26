@@ -61,8 +61,13 @@ enum {
 
   EQUIP_ID_AXE = 23996, // Axes info
 
+#ifdef BUILD_TBC
   ATTACK_TIMER_DEFAULT = 2400, // note: for WotLK it is 2000
   ATTACK_TIMER_AXES = 1600,    // note: for WotLK it is 1333
+#elif BUILD_WOTLK
+  ATTACK_TIMER_DEFAULT = 2000, // note: for TBC it was 2400
+  ATTACK_TIMER_AXES = 1333,    // note: for TBC it was 1600
+#endif
 
   MAX_ENFEEBLE_TARGETS = 5,
 };

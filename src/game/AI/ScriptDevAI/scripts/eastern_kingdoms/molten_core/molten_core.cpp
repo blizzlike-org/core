@@ -76,7 +76,11 @@ void instance_molten_core::OnObjectCreate(GameObject *pGo) {
     // Activate the rune if it was previously doused by a player (encounter set to SPECIAL)
     m_goEntryGuidStore[pGo->GetEntry()] = pGo->GetObjectGuid();
     for (auto m_aMoltenCoreRune : m_aMoltenCoreRunes) {
+#ifdef BUILD_TBC
       if (m_aMoltenCoreRune.m_uiRuneEntry == pGo->GetEntry() && GetData(m_aMoltenCoreRune.m_uiType) == SPECIAL) {
+#elif BUILD_WOTLK
+      if (m_aMoltenCoreRune.m_uiRuneEntry == pGo->GetEntry() && GetData(m_aMoltenCoreRune.m_uiType) == DONE) {
+#endif
         pGo->UseDoorOrButton();
         break;
       }
@@ -129,6 +133,9 @@ void instance_molten_core::SetData(uint32 uiType, uint32 uiData) {
         if (m_aMoltenCoreRune.m_uiType == uiType) {
           if (GameObject *pGo = GetSingleGameObjectFromStorage(m_aMoltenCoreRune.m_uiFlamesCircleEntry))
             pGo->SetLootState(GO_JUST_DEACTIVATED);
+#ifdef BUILD_WOTLK
+          DoUseDoorOrButton(m_aMoltenCoreRune.m_uiRuneEntry);
+#endif
           break;
         }
       }
@@ -145,7 +152,11 @@ void instance_molten_core::SetData(uint32 uiType, uint32 uiData) {
   }
 
   // Check if Majordomo can be summoned
+#ifdef BUILD_TBC
   if (uiData == SPECIAL)
+#elif BUILD_WOTLK
+  if (uiData == DONE)
+#endif
     DoSpawnMajordomoIfCan(false);
 
   if (uiData == DONE || uiData == SPECIAL) {
@@ -182,7 +193,11 @@ void instance_molten_core::DoSpawnMajordomoIfCan(bool bByPlayerEnter) {
 
   // Check if all rune bosses are done
   for (uint8 i = TYPE_MAGMADAR; i < TYPE_MAJORDOMO; ++i) {
+#ifdef BUILD_TBC
     if (m_auiEncounter[i] != SPECIAL)
+#elif BUILD_WOTLK
+    if (m_auiEncounter[i] != DONE)
+#endif
       return;
   }
 

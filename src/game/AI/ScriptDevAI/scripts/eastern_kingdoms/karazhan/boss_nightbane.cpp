@@ -156,6 +156,14 @@ struct boss_nightbaneAI : public CombatAI {
     }
   }
 
+#ifdef BUILD_WOTLK
+  void JustRespawned() override {
+    CombatAI::JustRespawned();
+    if (GameObject *urn = m_instance->GetSingleGameObjectFromStorage(GO_BLACKENED_URN))
+      urn->ResetDoorOrButton();
+  }
+#endif
+
   void JustSummoned(Creature *summoned) override {
     m_skeletons.push_back(summoned->GetObjectGuid());
 
@@ -171,7 +179,11 @@ struct boss_nightbaneAI : public CombatAI {
   }
 
   void MovementInform(uint32 motionType, uint32 pointId) override {
+#ifdef BUILD_TBC
     if (motionType == PATH_MOTION_TYPE) {
+#elif
+    if (motionType == WAYPOINT_MOTION_TYPE) {
+#endif
       if (m_bCombatStarted) // combat movement
       {
         if (pointId == POINT_LANDING_END) {
@@ -305,7 +317,9 @@ struct boss_nightbaneAI : public CombatAI {
       if (m_creature->GetHealthPercent() < 100 - 25 * m_uiFlightPhase) {
         // Start air phase movement (handled by creature_movement_template)
         SetCombatMovement(false);
+#ifdef BUILD_TBC
         m_creature->HandleEmote(EMOTE_ONESHOT_LIFTOFF);
+#endif
         m_creature->SetByteValue(UNIT_FIELD_BYTES_1, 3, UNIT_BYTE1_FLAG_FLY_ANIM);
         m_creature->RemoveByteFlag(UNIT_FIELD_BYTES_1, 3, UNIT_BYTE1_FLAG_ALWAYS_STAND);
         m_creature->SetCanFly(true);

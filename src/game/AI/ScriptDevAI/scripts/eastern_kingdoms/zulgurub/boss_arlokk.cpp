@@ -178,8 +178,15 @@ struct boss_arlokkAI : public ScriptedAI {
 
       if (m_uiGougeTimer < uiDiff) {
         if (DoCastSpellIfCan(m_creature, SPELL_GOUGE) == CAST_OK) {
+#ifdef BUILD_TBC
           if (m_creature->getThreatManager().getThreat(m_creature->GetVictim()))
             m_creature->getThreatManager().modifyThreatPercent(m_creature->GetVictim(), -80);
+#elif BUILD_WOTLK
+          if (Unit *pTarget = m_creature->GetVictim()) {
+            if (m_creature->getThreatManager().getThreat(pTarget))
+              m_creature->getThreatManager().modifyThreatPercent(pTarget, -80);
+          }
+#endif
 
           m_uiGougeTimer = urand(17000, 27000);
         }

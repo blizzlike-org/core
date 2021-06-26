@@ -130,6 +130,7 @@ void instance_blackrock_spire::OnObjectCreate(GameObject *pGo) {
       pGo->SetGoState(GO_STATE_ACTIVE);
     break;
 
+#ifdef BUILD_TBC
   case GO_BRAZIER_1:
   case GO_BRAZIER_2:
   case GO_BRAZIER_3:
@@ -138,6 +139,7 @@ void instance_blackrock_spire::OnObjectCreate(GameObject *pGo) {
   case GO_BRAZIER_6:
   case GO_DRAGONSPINE:
     break;
+#endif
 
   case GO_ROOM_1_RUNE:
     m_aRoomRuneGuid[0] = pGo->GetObjectGuid();
@@ -483,6 +485,7 @@ void instance_blackrock_spire::OnCreatureDespawn(Creature *pCreature) {
     pCreature->CastSpell(pCreature, SPELL_FINKLE_IS_EINHORN, TRIGGERED_OLD_TRIGGERED);
 }
 
+#ifdef BUILD_TBC
 void instance_blackrock_spire::DoOpenUpperDoorIfCan(Player *pPlayer) {
   if (m_bUpperDoorOpened)
     return;
@@ -493,6 +496,7 @@ void instance_blackrock_spire::DoOpenUpperDoorIfCan(Player *pPlayer) {
     m_bUpperDoorOpened = true;
   }
 }
+#endif
 
 void instance_blackrock_spire::DoProcessEmberseerEvent() {
   if (GetData(TYPE_EMBERSEER) == DONE || GetData(TYPE_EMBERSEER) == IN_PROGRESS)
@@ -708,6 +712,7 @@ void instance_blackrock_spire::Update(uint32 uiDiff) {
       m_uiFlamewreathEventTimer -= uiDiff;
   }
 
+#ifdef BUILD_TBC
   // unlock dragon spine door
   if (m_uiDragonspineDoorTimer) {
     if (m_uiDragonspineDoorTimer <= uiDiff) {
@@ -737,6 +742,7 @@ void instance_blackrock_spire::Update(uint32 uiDiff) {
     } else
       m_uiDragonspineDoorTimer -= uiDiff;
   }
+#endif
 }
 
 void instance_blackrock_spire::StartflamewreathEventIfCan() {
@@ -763,7 +769,9 @@ bool AreaTrigger_at_blackrock_spire(Player *pPlayer, AreaTriggerEntry const *pAt
   switch (pAt->id) {
   case AREATRIGGER_ENTER_UBRS:
     if (instance_blackrock_spire *pInstance = (instance_blackrock_spire *)pPlayer->GetInstanceData()) {
+#ifdef BUILD_TBC
       pInstance->DoOpenUpperDoorIfCan(pPlayer);
+#endif
       pInstance->DoSortRoomEventMobs();
     }
     break;

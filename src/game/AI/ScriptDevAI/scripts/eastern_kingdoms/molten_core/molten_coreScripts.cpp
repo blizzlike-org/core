@@ -27,6 +27,7 @@ EndContentData */
 #include "AI/ScriptDevAI/include/sc_common.h"
 #include "molten_core.h"
 
+#ifdef BUILD_TBX
 /*######
 ## go_molten_core_rune
 ######*/
@@ -50,12 +51,15 @@ bool GOUse_go_molten_core_rune(Player * /*pPlayer*/, GameObject *pGo) {
 
   return true;
 }
+#endif
 
 void AddSC_molten_core() {
+#ifdef BUILD_TBC
   Script *pNewScript;
 
   pNewScript = new Script;
   pNewScript->Name = "go_molten_core_rune";
   pNewScript->pGOUse = &GOUse_go_molten_core_rune;
   pNewScript->RegisterSelf();
+#endif
 }

@@ -188,6 +188,7 @@ struct world_map_eastern_kingdoms : public ScriptedMap, public TimerManager {
     return false;
   }
 
+#ifdef BUILD_TBC
   void FillInitialWorldStates(ByteBuffer &data, uint32 &count, uint32 /*zoneId*/, uint32 areaId) override {
     switch (areaId) {
     case AREAID_GOLDSHIRE:
@@ -201,12 +202,16 @@ struct world_map_eastern_kingdoms : public ScriptedMap, public TimerManager {
       break;
     }
   }
+#endif
 
   void OnCreatureCreate(Creature *pCreature) override {
     switch (pCreature->GetEntry()) {
     case NPC_NEZRAZ:
     case NPC_HINDENBURG:
     case NPC_ZAPETTA:
+'ifdef BUILD_WOTLK
+    case NPC_MEEFI_FARTHROTTLE:
+#endif
     case NPC_SQUIBBY_OVERSPECK:
     case NPC_JONATHAN:
     case NPC_WRYNN:
@@ -240,12 +245,14 @@ struct world_map_eastern_kingdoms : public ScriptedMap, public TimerManager {
     case NPC_ARGENT_PROTECTOR:
       _spawnProtector.insert(pCreature->GetObjectGuid());
       break;
+#ifdef BUILD_TBC
     case NPC_MASKED_ORPHAN_MATRON:
       m_npcEntryGuidStore[pCreature->GetEntry()] = pCreature->GetObjectGuid();
       break;
     case NPC_COSTUMED_ORPHAN_MATRON:
       m_npcEntryGuidCollection[pCreature->GetEntry()].push_back(pCreature->GetObjectGuid());
       break;
+#endif
     }
   }
 
@@ -363,6 +370,7 @@ struct world_map_eastern_kingdoms : public ScriptedMap, public TimerManager {
     }
   }
 
+#ifdef BUILD_TBC
   void Update(uint32 diff) override {
     UpdateTimers(diff);
 
@@ -376,6 +384,9 @@ struct world_map_eastern_kingdoms : public ScriptedMap, public TimerManager {
           matron->AI()->SendAIEvent(AI_EVENT_CUSTOM_A, matron, matron);
     }
   }
+#elif BUILD_WOTLK
+  void Update(uint32 uiDiff) override { UpdateTimers(uiDiff); }
+#endif
 
   uint32 GetData(uint32 type) const override {
     if (type >= TYPE_SHADE_OF_THE_HORSEMAN_ATTACK_PHASE && type <= TYPE_SHADE_OF_THE_HORSEMAN_MAX)

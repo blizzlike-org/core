@@ -83,9 +83,11 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI {
         if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0, SPELL_SHADOW_PORTAL,
                                                               SELECT_FLAG_PLAYER)) {
           if (DoCastSpellIfCan(pTarget, SPELL_SHADOW_PORTAL) == CAST_OK) {
+#ifdef BUILD_TBC
             // remove threat
             if (m_creature->getThreatManager().getThreat(pTarget))
               m_creature->getThreatManager().modifyThreatPercent(pTarget, -100);
+#endif
 
             m_uiTeleportTimer = urand(20000, 35000);
           }

@@ -175,8 +175,13 @@ struct boss_felmystAI : public ScriptedAI {
     if (m_pInstance)
       m_pInstance->SetData(TYPE_FELMYST, IN_PROGRESS);
 
+#ifdef BUILD_TBC
     float fGroundZ = m_creature->GetMap()->GetHeight(m_creature->GetPositionX(), m_creature->GetPositionY(),
                                                      m_creature->GetPositionZ());
+#elif BUILD_WOTLK
+    float fGroundZ = m_creature->GetMap()->GetHeight(m_creature->GetPhaseMask(), m_creature->GetPositionX(),
+                                                     m_creature->GetPositionY(), m_creature->GetPositionZ());
+#endif
     m_creature->GetMotionMaster()->MovePoint(PHASE_TRANSITION, pWho->GetPositionX(), pWho->GetPositionY(), fGroundZ);
     m_creature->HandleEmote(EMOTE_ONESHOT_LAND);
   }
@@ -220,8 +225,13 @@ struct boss_felmystAI : public ScriptedAI {
       // After the third breath land and resume phase 1
       if (m_uiCorruptionCount == 3) {
         m_uiPhase = PHASE_TRANSITION;
+#ifdef BUILD_TBC
         float fGroundZ = m_creature->GetMap()->GetHeight(m_creature->GetPositionX(), m_creature->GetPositionY(),
                                                          m_creature->GetPositionZ());
+#elif BUILD_WOTLK
+        float fGroundZ = m_creature->GetMap()->GetHeight(m_creature->GetPhaseMask(), m_creature->GetPositionX(),
+                                                         m_creature->GetPositionY(), m_creature->GetPositionZ());
+#endif
         m_creature->GetMotionMaster()->MovePoint(PHASE_TRANSITION, m_creature->GetVictim()->GetPositionX(),
                                                  m_creature->GetVictim()->GetPositionY(), fGroundZ);
         return;

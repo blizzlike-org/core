@@ -451,9 +451,15 @@ enum {
 
   NPC_GUARDIAN = 23597,
 
+#ifdef BUILD_TBC
   EQUIP_ID_HUGE_MAUL = 1012, // item id 5301
   EQUIP_ID_RED_SPEAR = 5592, // item id 13631
   EQUIP_ID_GUARDIAN = 23597, // item id 33979
+#elif BUILD_WOTLK
+  EQUIP_ID_HUGE_MAUL = 354, // item id 5301
+  EQUIP_ID_RED_SPEAR = 132, // item id 13631
+  EQUIP_ID_GUARDIAN = 759,  // item id 33979
+#endif
 
   ENTRY_HARRISON_WITH_HAT = 24375,
 };

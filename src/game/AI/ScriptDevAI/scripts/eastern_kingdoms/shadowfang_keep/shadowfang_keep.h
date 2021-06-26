@@ -6,7 +6,11 @@
 #define DEF_SHADOWFANG_H
 
 enum {
+#ifdef BUILD_TBC
   MAX_ENCOUNTER = 6,
+#elif BUILD_WOTLK
+  MAX_ENCOUNTER = 7,
+#endif
 
   TYPE_FREE_NPC = 1,
   TYPE_RETHILGORE = 2,
@@ -14,10 +18,17 @@ enum {
   TYPE_NANDOS = 4,
   TYPE_INTRO = 5,
   TYPE_VOIDWALKER = 6,
+#ifdef BUILD_WOTLK
+  TYPE_APOTHECARY = 7,
+#endif
 
   SAY_BOSS_DIE_AD = -1033007,
   SAY_BOSS_DIE_AS = -1033008,
+#ifdef BUILD_TBC
   YELL_PACK_DEAD = -1033020,
+#elif BUILD_WOTLK
+  YELL_PACK_DEAD = -1033026,
+#endif
   SAY_ARUGAL_INTRO_1 = -1033009,
   SAY_ARUGAL_INTRO_2 = -1033010,
   SAY_ARUGAL_INTRO_3 = -1033011,
@@ -42,6 +53,17 @@ enum {
   NPC_FENRUS = 4274,          // used to summon Arugal in Fenrus event
   NPC_VINCENT = 4444,         // Vincent should be "dead" is Arugal is done the intro already
 
+#ifdef BUILD_WOTLK
+  NPC_HUMMEL = 36296, // Love is in the Air event
+  NPC_FRYE = 36272,
+  NPC_BAXTER = 36565,
+  NPC_CROWN_APOTHECARY = 36885,
+  NPC_VALENTINE_BOSS_MGR = 36643,   // controller npc for the apothecary event
+  NPC_APOTHECARY_GENERATOR = 36212, // the npc which summons the crazed apothecary
+  NPC_CRAZED_APOTHECARY = 36568,    // casts spell 68957 on range check
+  NPC_VALENTINE_VIAL_BUNNY = 36530,
+#endif
+
   // Wolf Master Nandos intro event
   NPC_MASTER_NANDOS = 3927,
   NPC_LUPINE_HORROR = 3863,
@@ -53,6 +75,13 @@ enum {
   GO_SORCERER_DOOR = 18972,  // door to open when Fenrus the Devourer
   GO_ARUGAL_DOOR = 18971,    // door to open when Wolf Master Nandos
   GO_ARUGAL_FOCUS = 18973,   // this generates the lightning visual in the Fenrus event
+
+#ifdef BUILD_WOTLK
+  GO_APOTHECARE_VIALS = 190678, // move position for Baxter
+  GO_CHEMISTRY_SET = 200335,    // move position for Frye
+
+  MAX_APOTHECARY = 3,
+#endif
 };
 
 struct Waypoint {
@@ -89,6 +118,11 @@ public:
   void DoSpeech();
   void JustDidDialogueStep(int32 entry) override;
 
+#ifdef BUILD_WOTLK
+  void OnCreatureEvade(Creature *creature) override;
+  void OnCreatureRespawn(Creature *creature) override;
+#endif
+
   void SetData(uint32 type, uint32 data) override;
   uint32 GetData(uint32 type) const override;
 
@@ -97,11 +131,23 @@ public:
 
   void Update(const uint32 diff) override;
 
+#ifdef BUILD_WOTLK
+  void GetCrownApothecaryGuids(GuidList &lApothecaryList) const { lApothecaryList = m_lCrownApothecaryGuids; }
+#endif
+
 private:
   uint32 m_auiEncounter[MAX_ENCOUNTER];
   std::string m_strInstData;
 
+#ifdef BUILD_WOTLK
+  uint8 m_uiApothecaryDead;
+#endif
   GuidList m_lNandosWolvesGuids;
+#ifdef BUILD_WOTLK
+  GuidList m_lCrownApothecaryGuids;
+
+  uint32 m_uiApothecaryResetTimer;
+#endif
 };
 
 #endif

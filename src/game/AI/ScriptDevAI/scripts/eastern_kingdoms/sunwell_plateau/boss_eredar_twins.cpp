@@ -346,8 +346,15 @@ struct boss_sacrolashAI : public ScriptedAI {
     if (m_uiConfoundingBlowTimer < uiDiff) {
       if (DoCastSpellIfCan(m_creature->GetVictim(), SPELL_CONFOUNDING_BLOW) == CAST_OK) {
         // Reset threat
+#ifdef BUILD_TBC
         if (m_creature->getThreatManager().getThreat(m_creature->GetVictim()))
           m_creature->getThreatManager().modifyThreatPercent(m_creature->GetVictim(), -100);
+#elif BUILD_WOTLK
+        if (Unit *pTarget = m_creature->GetVictim()) {
+          if (m_creature->getThreatManager().getThreat(pTarget))
+            m_creature->getThreatManager().modifyThreatPercent(pTarget, -100);
+        }
+#endif
 
         m_uiConfoundingBlowTimer = urand(25000, 30000);
       }
