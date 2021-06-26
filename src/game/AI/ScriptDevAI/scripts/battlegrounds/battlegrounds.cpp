@@ -24,6 +24,10 @@ EndScriptData */
 #include "AI/ScriptDevAI/include/sc_common.h"
 #include "OutdoorPvP/OutdoorPvP.h"
 #include "Spells/Scripts/SpellScript.h"
+#ifdef BUILD_WOTLK
+#include "Entities/Transports.h"
+#include "Spells/SpellAuras.h"
+#endif
 
 // **** Script Info ****
 // Spiritguides in battlegrounds resurrecting many players at once
@@ -108,11 +112,22 @@ struct OpeningCapping : public SpellScript {
   }
 };
 
+#BUILD_TBC
 struct InactiveBattleground : public SpellScript {
+#elif BUILD_WOTLK
+struct InactiveBattleground : public SpellScript, public AuraScript {
+#endif
   SpellCastResult OnCheckCast(Spell *spell, bool /*strict*/) const override {
     Player *player = spell->GetCaster()->GetBeneficiaryPlayer();
     return player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_ONLY_BATTLEGROUNDS;
   }
+
+#ifdef BUILD_WOTLK
+  void OnApply(Aura *aura, bool apply) const override {
+    if (!apply && aura->GetRemoveMode() == AURA_REMOVE_BY_EXPIRE && aura->GetTarget()->GetTypeId() == TYPEID_PLAYER)
+      static_cast<Player *>(aura->GetTarget())->ToggleAFK();
+  }
+#endif
 };
 
 /*#####
@@ -122,9 +137,15 @@ struct InactiveBattleground : public SpellScript {
 # Contains following spells:
 # Arathi Basin: 23932, 23935, 23936, 23937, 23938
 # Alterac Valley: 24677
+# Isle of Conquest: 35092, 65825, 65826, 66686, 66687
 #####*/
 struct spell_battleground_banner_trigger : public SpellScript {
   void OnEffectExecute(Spell *spell, SpellEffectIndex effIdx) const override {
+#ifdef BUILD_WOTLK
+    if (effIdx != EFFECT_INDEX_0)
+      return;
+#endif
+
     // TODO: Fix when go casting is fixed
     WorldObject *obj = spell->GetAffectiveCasterObject();
 
@@ -144,6 +165,11 @@ struct spell_battleground_banner_trigger : public SpellScript {
 #####*/
 struct spell_outdoor_pvp_banner_trigger : public SpellScript {
   void OnEffectExecute(Spell *spell, SpellEffectIndex effIdx) const override {
+#ifdef BUILD_WOTLK
+    if (effIdx != EFFECT_INDEX_0)
+      return;
+#endif
+
     // TODO: Fix when go casting is fixed
     WorldObject *obj = spell->GetAffectiveCasterObject();
 
@@ -156,6 +182,145 @@ struct spell_outdoor_pvp_banner_trigger : public SpellScript {
   }
 };
 
+#ifdef BUILD_WOTLK
+/*#####
+# spell_split_teleport_boat - 52365, 52528, 53464, 53465
+#####*/
+
+struct spell_split_teleport_boat : public SpellScript {
+  void OnEffectExecute(Spell *spell, SpellEffectIndex effIdx) const override {
+    if (effIdx != EFFECT_INDEX_0)
+      return;
+
+    Unit *caster = spell->GetCaster();
+    if (!caster || !caster->IsPlayer())
+      return;
+
+    GameObject *target = spell->GetGOTarget();
+    if (!target || !target->IsTransport())
+      return;
+
+    GenericTransport *transport = static_cast<GenericTransport *>(target);
+    Player *player = static_cast<Player *>(caster);
+
+    // teleport uses local transport coords
+    player->TeleportTo(player->GetMapId(), 0.0f, 5.0f, 9.6f, 3.14f, 0, nullptr, transport);
+  }
+};
+
+/*#####
+# spell_gunship_portal_click - 66630, 66637
+#####*/
+
+struct spell_gunship_portal_click : public SpellScript {
+  void OnEffectExecute(Spell *spell, SpellEffectIndex effIdx) const override {
+    // effect 0 is for teleport; effect 1 unk, probably related to transport teleport logic
+    if (effIdx != EFFECT_INDEX_0)
+      return;
+
+    Unit *caster = spell->GetCaster();
+    if (!caster || !caster->IsPlayer())
+      return;
+
+    Unit *target = spell->GetUnitTarget();
+    if (!target)
+      return;
+
+    // teleport player to the unit target which is boarded on the ship; the correct ship is chosen base on where is the
+    // invis trigger spawned
+    Player *player = static_cast<Player *>(caster);
+    player->TeleportTo(player->GetMapId(), target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),
+                       target->GetOrientation());
+  }
+};
+
+/*######
+## spell_repair_cannon_aura - 68077
+######*/
+
+struct spell_repair_cannon_aura : public AuraScript {
+  void OnApply(Aura *aura, bool apply) const override {
+    if (!apply) {
+      Unit *target = aura->GetTarget();
+      if (!target)
+        return;
+
+      target->CastSpell(target, 68078, TRIGGERED_OLD_TRIGGERED);
+    }
+  }
+};
+
+/*######
+## spell_repair_cannon - 68078
+######*/
+
+struct spell_repair_cannon : public SpellScript {
+  void OnEffectExecute(Spell *spell, SpellEffectIndex effIdx) const override {
+    if (effIdx != EFFECT_INDEX_0)
+      return;
+
+    Unit *target = spell->GetUnitTarget();
+    if (!target)
+      return;
+
+    if (!target || !target->GetMap()->IsBattleGround() || !target->IsCreature())
+      return;
+
+    Creature *cannon = static_cast<Creature *>(target);
+
+    // change entry back to keep cannon, remove feign death and heal
+    cannon->UpdateEntry(34944);
+    cannon->RemoveAurasDueToSpell(29266);
+    cannon->CastSpell(cannon, 43978, TRIGGERED_OLD_TRIGGERED);
+
+    // reset faction based on battleground location; unfortunately updating entry causes the faction to reset
+    cannon->SetFactionTemporary(cannon->GetPositionX() < 500.0f ? 1732 : 1735, TEMPFACTION_NONE);
+  }
+};
+
+/*######
+## spell_end_of_round - 52459
+######*/
+
+struct spell_end_of_round : public SpellScript {
+  void OnEffectExecute(Spell *spell, SpellEffectIndex effIdx) const override {
+    if (effIdx != EFFECT_INDEX_1)
+      return;
+
+    Unit *target = spell->GetUnitTarget();
+    if (!target || !target->GetMap()->IsBattleGround() || !target->IsPlayer() || target->IsAlive())
+      return;
+
+    Player *player = static_cast<Player *>(target);
+
+    // resurrect dead players
+    player->ResurrectPlayer(1.0f);
+    player->SpawnCorpseBones();
+  }
+};
+
+/*######
+## spell_teleport_sota - 54640
+######*/
+
+struct spell_teleport_sota : public SpellScript {
+  void OnEffectExecute(Spell *spell, SpellEffectIndex effIdx) const override {
+    if (effIdx != EFFECT_INDEX_0)
+      return;
+
+    Unit *target = spell->GetUnitTarget();
+    if (!target || !target->IsPlayer())
+      return;
+
+    // Check for aura 54643
+    uint32 spellId = spell->m_spellInfo->CalculateSimpleValue(effIdx);
+
+    if (!target->HasAura(spellId))
+      target->CastSpell(target, spellId, TRIGGERED_OLD_TRIGGERED);
+  }
+};
+#endif
+
 void AddSC_battleground() {
   Script *pNewScript = new Script;
   pNewScript->Name = "npc_spirit_guide";
@@ -167,4 +332,12 @@ void AddSC_battleground() {
   RegisterSpellScript<InactiveBattleground>("spell_inactive");
   RegisterSpellScript<spell_battleground_banner_trigger>("spell_battleground_banner_trigger");
   RegisterSpellScript<spell_outdoor_pvp_banner_trigger>("spell_outdoor_pvp_banner_trigger");
+#ifdef BUILD_WOTLK
+  RegisterSpellScript<spell_split_teleport_boat>("spell_split_teleport_boat");
+  RegisterSpellScript<spell_gunship_portal_click>("spell_gunship_portal_click");
+  RegisterAuraScript<spell_repair_cannon_aura>("spell_repair_cannon_aura");
+  RegisterSpellScript<spell_repair_cannon>("spell_repair_cannon");
+  RegisterSpellScript<spell_end_of_round>("spell_end_of_round");
+  RegisterSpellScript<spell_teleport_sota>("spell_teleport_sota");
+#endif
 }
