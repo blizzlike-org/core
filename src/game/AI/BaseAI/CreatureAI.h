@@ -36,6 +36,10 @@ public:
   void DoFakeDeath(uint32 spellId = 0);
   void SetDeathPrevention(bool state);
   void ResetDeathPrevented() { m_deathPrevented = false; }
+#ifdef BUILD_WOTLK
+  /// Helper function which handles the combat reaction for vehicle passengers
+  void AttackPassengersIfCan(Unit *who);
+#endif
 
   bool DoRetreat() override;
   void DoCallForHelp(float radius) override;

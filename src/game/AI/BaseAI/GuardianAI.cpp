@@ -61,7 +61,12 @@ void GuardianAI::UpdateAI(const uint32 diff) {
 }
 
 int GuardianAI::Permissible(const Creature *creature) {
+#ifdef BUILD_TBC
   if (creature->IsPet() && ((Pet *)creature)->getPetType() == GUARDIAN_PET)
+#elif BUILD_WOTLK
+    if (creature->IsPet() &&
+        (((Pet *)creature)->getPetType() == GUARDIAN_PET || ((Pet *)creature)->getPetType() == PROTECTOR_PET))
+#endif
     return PERMIT_BASE_SPECIAL;
 
   return PERMIT_BASE_NO;

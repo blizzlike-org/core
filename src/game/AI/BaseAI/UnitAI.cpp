@@ -22,6 +22,9 @@
 #include "Grids/CellImpl.h"
 #include "Grids/GridNotifiers.h"
 #include "Grids/GridNotifiersImpl.h"
+#ifdef BUILD_WOTLK
+#include "Maps/TransportSystem.h"
+#endif
 #include "Server/DBCStores.h"
 #include "Spells/Spell.h"
 #include "Spells/SpellMgr.h"
@@ -406,6 +409,13 @@ void UnitAI::DetectOrAttack(Unit *who) {
 
   if (!m_unit->IsWithinLOSInMap(who, true))
     return;
+
+#ifdef BUILD_WOTLK
+  if (auto info = m_unit->GetTransportInfo())
+    if (info->GetTransport()->IsUnit())
+      if (static_cast<Unit *>(info->GetTransport())->GetCombatManager().IsEvadingHome())
+        return;
+#endif
 
   if (!m_unit->GetVictim() && !m_unit->IsInCombat()) {
     if (CanTriggerStealthAlert(who, attackRadius)) {

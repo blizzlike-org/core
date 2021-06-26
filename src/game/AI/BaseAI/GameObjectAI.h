@@ -19,6 +19,9 @@
 #define DEF_GAMEOBJECT_AI_H
 
 #include "AI/BaseAI/AIDefines.h"
+#ifdef BUILD_WOTLK
+#include "Entities/GameObjectDefines.h"
+#endif
 #include "Platform/Define.h"
 
 class GameObject;
@@ -52,6 +55,13 @@ public:
    */
   virtual void OnLootStateChange() {}
 
+#ifdef BUILD_WOTLK
+  /*
+   * Called when GO state changes.
+   */
+  virtual void OnGoStateChange(GOState /*state*/) {}
+#endif
+
   /*
    * Called when a GO appears in the world to normal observers
    */
@@ -71,6 +81,13 @@ public:
    * Enables handling of GO Use by all units
    */
   virtual void OnUse(Unit * /*user*/, SpellEntry const * /*spellInfo*/);
+
+#ifdef BUILD_WOTLK
+  /*
+   * Enables handling transport
+   */
+  virtual void JustReachedStopPoint() {}
+#endif
 
 protected:
   GameObject *m_go;
