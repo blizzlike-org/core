@@ -375,6 +375,10 @@ enum {
   NPC_JANALAI = 23578,
   NPC_HALAZZI = 23577,
   NPC_MALACRASS = 24239,
+
+#ifdef BUILD_WOTLK
+  NPC_SINDRAGOSA = 36853,
+#endif
 };
 
 bool ScriptedAI::EnterEvadeIfOutOfCombatArea(const uint32 diff) {
@@ -406,6 +410,12 @@ bool ScriptedAI::EnterEvadeIfOutOfCombatArea(const uint32 diff) {
   case NPC_KARGATH_BLADEFIST:
     if (x < 270.0f && x > 185.0f)
       return false;
+#ifdef BUILD_WOTLK
+    break;
+  case NPC_SINDRAGOSA:
+    if (x > 4314.0f)
+      return false;
+#endif
     break;
   case NPC_AKILZON:
     if (x > 336.259f)

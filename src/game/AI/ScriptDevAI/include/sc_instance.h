@@ -67,6 +67,11 @@ public:
     DoOrSimulateScriptTextForMap(textEntry, creatureEntry, instance, GetSingleCreatureFromStorage(creatureEntry, true));
   }
 
+#ifdef BUILD_WOTLK
+  // Starts a timed achievement criteria for all players in instance
+  void DoStartTimedAchievement(AchievementCriteriaTypes criteriaType, uint32 uiTimedCriteriaMiscId);
+#endif
+
 protected:
   void DespawnGuids(GuidVector &spawns); // despawns all creature guids and clears contents
 
@@ -126,6 +131,10 @@ protected:
   virtual void JustDidDialogueStep(int32 /*entry*/) {}
   /// Will be called to get a speaker, MUST be implemented if not used in instances
   virtual Creature *GetSpeakerByEntry(uint32 /*entry*/) { return nullptr; }
+#ifdef BUILD_WOTLK
+  /// Will be called to get a target; OPTIONAL
+  virtual Unit *GetDialogueTarget() { return nullptr; }
+#endif
 
 private:
   void DoNextDialogueStep();

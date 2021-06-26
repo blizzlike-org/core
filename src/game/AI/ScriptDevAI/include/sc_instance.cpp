@@ -16,7 +16,12 @@ void ScriptedInstance::DoUseDoorOrButton(ObjectGuid guid, uint32 withRestoreTime
     return;
 
   if (GameObject *pGo = instance->GetGameObject(guid)) {
+#ifdef BUILD_TBC
     if (pGo->GetGoType() == GAMEOBJECT_TYPE_DOOR || pGo->GetGoType() == GAMEOBJECT_TYPE_BUTTON) {
+#elif BUILD_WOTLK
+    if (pGo->GetGoType() == GAMEOBJECT_TYPE_DOOR || pGo->GetGoType() == GAMEOBJECT_TYPE_BUTTON ||
+        pGo->GetGoType() == GAMEOBJECT_TYPE_TRAPDOOR) {
+#endif
       if (pGo->GetLootState() == GO_READY)
         pGo->UseDoorOrButton(withRestoreTime, useAlternativeState);
       else if (pGo->GetLootState() == GO_ACTIVATED)
@@ -208,6 +213,26 @@ void ScriptedInstance::GetGameObjectGuidVectorFromStorage(uint32 entry, GuidVect
     entryGuidVector = (*iter).second;
 }
 
+#ifdef BUILD_WOTLK
+/**
+   Helper function to start a timed achievement criteria for players in the map
+
+   @param   criteriaType The Type that is required to complete the criteria, see enum AchievementCriteriaTypes in MaNGOS
+   @param   uiTimedCriteriaMiscId The ID that identifies how the criteria is started
+ */
+void ScriptedInstance::DoStartTimedAchievement(AchievementCriteriaTypes criteriaType, uint32 uiTimedCriteriaMiscId) {
+  Map::PlayerList const &lPlayers = instance->GetPlayers();
+
+  if (!lPlayers.isEmpty()) {
+    for (const auto &lPlayer : lPlayers) {
+      if (Player *pPlayer = lPlayer.getSource())
+        pPlayer->StartTimedAchievementCriteria(criteriaType, uiTimedCriteriaMiscId);
+    }
+  } else
+    debug_log("SD2: DoStartTimedAchievement attempt start achievements but no players in map.");
+}
+#endif
+
 /**
    Constructor for DialogueHelper
 
@@ -309,8 +334,17 @@ void DialogueHelper::DoNextDialogueStep() {
         pSpeaker = m_instance->GetSingleCreatureFromStorage(uiSpeakerEntry);
     }
 
-    if (pSpeaker)
+    if (pSpeaker) {
+#ifdef BUILD_TBC
       DoScriptText(iTextEntry, pSpeaker);
+#elif BUILD_WOTLK
+      // Use target if provided
+      if (Unit *pTarget = GetDialogueTarget())
+        DoScriptText(iTextEntry, pSpeaker, pTarget);
+      else
+        DoScriptText(iTextEntry, pSpeaker);
+    }
+#endif
   }
 
   JustDidDialogueStep(m_dialogueArray ? m_currentEntry->textEntry : m_currentEntryTwoSide->textEntry);
