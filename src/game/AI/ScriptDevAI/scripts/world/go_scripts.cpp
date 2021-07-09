@@ -126,8 +126,17 @@ struct npc_ethereum_prisonerAI : public ScriptedAI, public CombatActions {
       ResetTimer(PRISONER_CAST, 6000);
     });
     AddCustomAction(PRISONER_CAST, true, [&] {
-      if (Player *player = m_creature->GetMap()->GetPlayer(m_playerGuid))
+      if (Player *player = m_creature->GetMap()->GetPlayer(m_playerGuid)) {
         DoCastSpellIfCan(player, GetSpellId());
+
+        // The Sporeggar spell only awards 150 reputation.
+        // It should however give 450 repution instead.
+        // Casting it two more times..
+        if(SPELL_REP_SPOR == GetSpellId()) {
+          DoCastSpellIfCan(player, GetSpellId());
+          DoCastSpellIfCan(player, GetSpellId());
+        }
+      }
       m_creature->ForcedDespawn(2000);
     });
     JustRespawned();
