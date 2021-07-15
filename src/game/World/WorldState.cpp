@@ -934,7 +934,7 @@ enum {
   QUEST_A_CHARITABLE_DONATION = 11545,
   QUEST_A_MAGNANIMOUS_BENEFACTOR = 11549,
 
-  COUNTER_MAX_VAL_REQ = 10000,
+  COUNTER_MAX_VAL_REQ = 20,
 };
 
 void WorldState::AddSunsReachProgress(uint32 questId) {
