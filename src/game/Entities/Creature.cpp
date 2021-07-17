@@ -1869,6 +1869,10 @@ void Creature::CallAssistance() {
     if (GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_NO_CALL_ASSIST)
       return;
 
+    // disable assistance call on aggro for already linked creatures
+    if (m_isCreatureLinkingTrigger)
+      return;
+
     AI()->SendAIEventAround(AI_EVENT_CALL_ASSISTANCE, GetVictim(),
                             sWorld.getConfig(CONFIG_UINT32_CREATURE_FAMILY_ASSISTANCE_DELAY),
                             sWorld.getConfig(CONFIG_FLOAT_CREATURE_FAMILY_ASSISTANCE_RADIUS));
