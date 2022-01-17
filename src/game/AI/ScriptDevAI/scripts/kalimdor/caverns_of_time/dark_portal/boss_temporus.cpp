@@ -76,24 +76,24 @@ struct boss_temporusAI : public CombatAI {
     if (m_isRegularMode) {
       switch (id) {
       case TEMPORUS_ACTION_WING_BUFFET:
-        return urand(18000, 22000);
+        return urand(25000, 35000);
       case TEMPORUS_ACTION_HASTEN:
-        return urand(13000, 18000);
+        return urand(15000, 23000);
       case TEMPORUS_ACTION_MORTAL_WOUND:
-        return urand(3500, 7000);
+        return 8000;
       default:
         return 0;
       }
     } else {
       switch (id) {
       case TEMPORUS_ACTION_SPELL_REFLECTION:
-        return urand(17000, 22000);
+        return 30000;
       case TEMPORUS_ACTION_WING_BUFFET:
-        return urand(14000, 18000);
+        return urand(25000, 35000);
       case TEMPORUS_ACTION_HASTEN:
-        return urand(10000, 15000);
+        return urand(15000, 23000);
       case TEMPORUS_ACTION_MORTAL_WOUND:
-        return urand(3500, 7000);
+        return 8000;
       default:
         return 0;
       }
@@ -104,11 +104,11 @@ struct boss_temporusAI : public CombatAI {
     if (m_isRegularMode) {
       switch (id) {
       case TEMPORUS_ACTION_WING_BUFFET:
-        return urand(20000, 28000);
+        return urand(20000, 30000);
       case TEMPORUS_ACTION_HASTEN:
-        return urand(17000, 21000);
+        return urand(20000, 25000);
       case TEMPORUS_ACTION_MORTAL_WOUND:
-        return urand(4500, 7000);
+        return urand(10000, 20000);
       default:
         return 0;
       }
@@ -117,11 +117,11 @@ struct boss_temporusAI : public CombatAI {
       case TEMPORUS_ACTION_SPELL_REFLECTION:
         return urand(25000, 35000);
       case TEMPORUS_ACTION_WING_BUFFET:
-        return urand(14000, 28000);
+        return urand(20000, 30000);
       case TEMPORUS_ACTION_HASTEN:
-        return urand(12000, 21000);
+        return urand(20000, 25000);
       case TEMPORUS_ACTION_MORTAL_WOUND:
-        return urand(4500, 7000);
+        return urand(10000, 20000);
       default:
         return 0;
       }
