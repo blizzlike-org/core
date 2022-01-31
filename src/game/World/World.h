@@ -39,6 +39,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <array>
 
 class Object;
 class ObjectGuid;
@@ -422,6 +423,8 @@ enum RealmZone {
   REALM_ZONE_CN5_8 = 37    // basic-Latin at create, any at login
 };
 
+#define MAX_PLAYER_LEVEL 255
+
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder {
   typedef std::function<void(const char *)> Print;
@@ -629,6 +632,9 @@ public:
   static TimePoint GetCurrentClockTime() { return m_currentTime; }
   static uint32 GetCurrentDiff() { return m_currentDiff; }
 
+  uint32 GetExperienceCapForLevel(uint32 level, Team team);
+  void GetExperienceCapArray(Team team, std::array<uint32, MAX_PLAYER_LEVEL>& capArray);
+
   template <typename T> void ExecuteForAllSessions(T executor) {
     for (auto &data : m_sessions)
       executor(*data.second);
@@ -652,6 +658,8 @@ protected:
   void ResetDailyQuests();
   void ResetWeeklyQuests();
   void ResetMonthlyQuests();
+
+  void LoadExperienceBrackets();
 #ifdef BUILD_METRICS
   void GeneratePacketMetrics(); // thread safe due to atomics
 #endif
@@ -746,6 +754,8 @@ private:
   static uint32 m_currentMSTime;
   static TimePoint m_currentTime;
   static uint32 m_currentDiff;
+
+  std::array<std::array<uint32, MAX_PLAYER_LEVEL>, 2> m_experienceBrackets;
 
   Messager<World> m_messager;
 

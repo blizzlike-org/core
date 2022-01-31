@@ -126,6 +126,10 @@ World::World()
 
   for (bool &m_configBoolValue : m_configBoolValues)
     m_configBoolValue = false;
+
+  for (int i = 0; i < 2; ++i)
+    for (int k = 0; k < MAX_PLAYER_LEVEL; ++k)
+      m_experienceBrackets[i][k] = 1;
 }
 
 /// World destructor
@@ -1353,6 +1357,10 @@ void World::SetInitialWorldSettings() {
   SetMonthlyQuestResetTime();
   sLog.outString();
 
+  sLog.outString("Loading Experience brackets...");
+  LoadExperienceBrackets();
+  sLog.outString();
+
   sLog.outString("Loading Spam records...");
   LoadSpamRecords();
   sLog.outString();
@@ -2219,6 +2227,23 @@ void World::LoadEventGroupChosen() {
     GenerateEventGroupEvents(true, true, false);
 }
 
+void World::LoadExperienceBrackets() {
+  QueryResult* result = CharacterDatabase.Query("SELECT low, high, team, value FROM experience_bracket_cap");
+  if (result) {
+    do {
+      Field* fields = result->Fetch();
+      uint32 low = fields[0].GetUInt32();
+      uint32 high = fields[1].GetUInt32();
+      uint32 team = fields[2].GetUInt32();
+      uint32 value = fields[3].GetUInt32();
+      for (; low <= high; low++)
+        m_experienceBrackets[team][low] = value;
+    } while (result->NextRow());
+
+    delete result;
+  }
+}
+
 void World::LoadSpamRecords(bool reload) {
   QueryResult *result = WorldDatabase.Query("SELECT record FROM spam_records");
 
@@ -2521,3 +2546,11 @@ void World::GeneratePacketMetrics() {
   meas_players.add_field("druid", std::to_string(GetOnlineClassPlayers(CLASS_DRUID)));
 }
 #endif
+
+void World::GetExperienceCapArray(Team team, std::array<uint32, MAX_PLAYER_LEVEL>& capArray) {
+  capArray = m_experienceBrackets[team == HORDE ? 0 : 1];
+}
+
+uint32 World::GetExperienceCapForLevel(uint32 level, Team team) {
+  return m_experienceBrackets[team == HORDE ? 0 : 1][level];
+}

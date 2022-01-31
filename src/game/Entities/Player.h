@@ -703,6 +703,10 @@ enum PlayerRestState {
   REST_STATE_RAF_LINKED = 0x04 // Exact use unknown
 };
 
+enum PlayerSettings {
+  PLAYER_SETTING_XP_MODIFIER = 1,
+};
+
 class PlayerTaxi {
 public:
   PlayerTaxi();
@@ -2164,6 +2168,11 @@ public:
   void SetTitle(uint32 titleId, bool lost = false);
   void SetTitle(CharTitlesEntry const *title, bool lost = false, bool send = true);
 
+  uint32 GetPlayerXPModifier() { return m_experienceModifier; }
+  void SetPlayerXPModifier(uint32 modifier) { m_experienceModifier = modifier; }
+  void _SaveXPModifier();
+  void SendXPRateToPlayer();
+
   void SendMessageToPlayer(std::string const &message) const; // debugging purposes
 
 #ifdef BUILD_PLAYERBOT
@@ -2548,6 +2557,8 @@ private:
 
   std::unordered_map<uint32, TimePoint> m_enteredInstances;
   uint32 m_createdInstanceClearTimer;
+
+  uint32 m_experienceModifier;
 };
 
 void AddItemsSetItem(Player *player, Item *item);
