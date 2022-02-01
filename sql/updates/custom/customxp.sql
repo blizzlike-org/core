@@ -7,11 +7,11 @@ CREATE TABLE `experience_bracket_cap` (
   PRIMARY KEY (`low`,`high`,`team`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='XP System';
 
-INSERT INTO experience_bracket_cap VALUES(1, 57, 67, 2); -- horde
-INSERT INTO experience_bracket_cap VALUES(1, 57, 469, 2); -- alliance
+INSERT INTO experience_bracket_cap VALUES(1, 57, 0, 2); -- horde
+INSERT INTO experience_bracket_cap VALUES(58, 70, 0, 1); -- horde
 
-INSERT INTO experience_bracket_cap VALUES(58, 70, 67, 1); -- horde
-INSERT INTO experience_bracket_cap VALUES(58, 70, 469, 1); -- alliance
+INSERT INTO experience_bracket_cap VALUES(1, 57, 1, 2); -- alliance
+INSERT INTO experience_bracket_cap VALUES(58, 70, 1, 1); -- alliance
 
 DROP TABLE IF EXISTS `character_settings`;
 CREATE TABLE `character_settings` (
@@ -20,6 +20,3 @@ CREATE TABLE `character_settings` (
   `value` int(11) unsigned NOT NULL DEFAULT '0' COMMENT 'Setting value',
   PRIMARY KEY (`guid`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='Player System';
-
-DELETE FROM command WHERE name = 'xp';
-INSERT INTO command VALUES('xp', '0', 'Syntax: .xp #subcommand XP boost commands');

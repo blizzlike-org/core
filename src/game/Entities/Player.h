@@ -2171,7 +2171,6 @@ public:
   uint32 GetPlayerXPModifier() { return m_experienceModifier; }
   void SetPlayerXPModifier(uint32 modifier) { m_experienceModifier = modifier; }
   void _SaveXPModifier();
-  void SendXPRateToPlayer();
 
   void SendMessageToPlayer(std::string const &message) const; // debugging purposes
 

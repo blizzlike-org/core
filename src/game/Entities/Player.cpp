@@ -2533,10 +2533,10 @@ void Player::GiveLevel(uint32 level) {
   GetSession()->SetCurrentPlayerLevel(level);
   SendQuestGiverStatusMultiple();
 
+  // set player experience rate on login
   uint32 cap = sWorld.GetExperienceCapForLevel(getLevel(), m_team);
   if (cap < m_experienceModifier) {
     SetPlayerXPModifier(cap);
-    SendXPRateToPlayer();
   }
 }
 
@@ -16573,14 +16573,6 @@ void Player::_SaveXPModifier() {
   }
   else
     CharacterDatabase.PExecute("INSERT INTO character_settings(guid,id,value) VALUES('%u','%u','%u')", GetGUIDLow(), PLAYER_SETTING_XP_MODIFIER, m_experienceModifier);
-}
-
-void Player::SendXPRateToPlayer() {
-  std::string xpLine = "Current XP rate:" + std::to_string(m_experienceModifier) + "\n";
-  WorldPacket data;
-  ChatHandler::BuildChatPacket(data, CHAT_MSG_SYSTEM, xpLine.data(), LANG_UNIVERSAL, CHAT_TAG_NONE, GetObjectGuid());
-  if (WorldSession* session = GetSession())
-    session->SendPacket(data);
 }
 
 // send Proficiency
